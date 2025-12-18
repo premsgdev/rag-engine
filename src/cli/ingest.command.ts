@@ -11,9 +11,9 @@ export class IngestCommand extends CommandRunner {
         super()
     }   
     async run(): Promise<void> {
-        console.log('🚀 IngestCommand started'); // 👈 IMPORTANT
+        console.log('IngestCommand started');
         await this.ingestService.ingestAll();
-        console.log('🏁 IngestCommand finished');
+        console.log('IngestCommand finished');
     }
     
 }
