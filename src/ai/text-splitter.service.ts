@@ -16,7 +16,7 @@ export class TextSplitterService {
     return chunks.map((chunk) => ({
       content: chunk.pageContent,
       hash: this.hash(chunk.pageContent),
-      language
+      language,
     }));
   }
 

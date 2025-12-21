@@ -9,12 +9,21 @@ export class EmbeddingsService implements OnModuleInit {
     // Lazy load once at app startup
     this.embedder = await pipeline(
       'feature-extraction',
-      'Xenova/all-MiniLM-L6-v2'
+      'Xenova/all-MiniLM-L6-v2',
     );
   }
 
   async embed(texts: string[]): Promise<number[][]> {
     const output = await this.embedder(texts, {
+      pooling: 'mean',
+      normalize: true,
+    });
+
+    return output.tolist();
+  }
+
+  async embedSingle(text: string): Promise<number[]> {
+    const output = await this.embedder(text, {
       pooling: 'mean',
       normalize: true,
     });

@@ -4,10 +4,7 @@ import { AiModule } from '../ai/ai.module';
 import { RedisModule } from '../redis/redis.module';
 
 @Module({
-  imports: [
-    AiModule,
-    RedisModule,
-  ],
+  imports: [AiModule, RedisModule],
   providers: [IngestService],
   exports: [IngestService],
 })

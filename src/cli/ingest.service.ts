@@ -8,19 +8,12 @@ import { EmbeddingsService } from '../ai/embeddings.service';
 import { ChromaService } from '../ai/chroma.service';
 import { RedisService } from '../redis/redis.service';
 import { languageCode, SUPPORTED_LANGUAGES } from '../ai/language.types';
-
-type TextChunk = {
-  content: string;
-  hash: string;
-  language: languageCode;
-};
-
+import { TextChunk } from '../ai/chunks.type';
 
 @Injectable()
 export class IngestService {
   private documentsDir = path.join(process.cwd(), 'data/documents');
   private collectionName = 'rag-documents';
-  
 
   constructor(
     private readonly textSplitter: TextSplitterService,
@@ -30,33 +23,34 @@ export class IngestService {
   ) {}
 
   async ingestAll(): Promise<void> {
-    console.log('base directory ',this.documentsDir);
-    
-    for (const language of SUPPORTED_LANGUAGES){
-        await this.ingestLanguage(language);
+    console.log('base directory ', this.documentsDir);
+
+    for (const language of SUPPORTED_LANGUAGES) {
+      await this.ingestLanguage(language);
     }
-    
   }
 
   private async ingestLanguage(language: languageCode): Promise<void> {
     const langDir = path.join(this.documentsDir, language);
     if (!fs.existsSync(langDir)) {
       console.warn('Directory not found for language: ', language);
-      return
+      return;
     }
-    const files = (await fs
-      .readdirSync(langDir))
-      .filter(file => file.toLocaleLowerCase().endsWith('.pdf'));
+    const files = (await fs.readdirSync(langDir)).filter((file) =>
+      file.toLocaleLowerCase().endsWith('.pdf'),
+    );
 
-    
     console.log(`Found ${files.length} PDF files for language ${language}`);
     for (const file of files) {
-      console.log('working on ',file);
+      console.log('working on ', file);
       await this.ingestFile(path.join(langDir, file), language);
     }
   }
 
-  private async ingestFile(filePath: string, language: languageCode): Promise<void> {
+  private async ingestFile(
+    filePath: string,
+    language: languageCode,
+  ): Promise<void> {
     console.log(`Ingesting ${filePath}`);
 
     const buffer = fs.readFileSync(filePath);
@@ -68,9 +62,7 @@ export class IngestService {
     console.log(` chunks length :-  ${chunks.length}`);
     const newChunks: TextChunk[] = [];
     for (const chunk of chunks) {
-      const exists = await this.redis
-        .getClient()
-        .get(`chunk:${chunk.hash}`);
+      const exists = await this.redis.getClient().get(`chunk:${chunk.hash}`);
 
       if (!exists) {
         newChunks.push(chunk);
@@ -92,20 +84,17 @@ export class IngestService {
         embeddings,
         documents: newChunks.map((c) => c.content),
         ids: newChunks.map((c) => c.hash),
-        metadatas: newChunks.map((c) => ({ 
+        metadatas: newChunks.map((c) => ({
           language: c.language,
-          source: filePath
+          source: filePath,
         })),
-      }); 
+      });
     } catch (error) {
       throw new Error(`Error adding vectors to Chroma: ${error}`);
     }
-    
 
     for (const chunk of newChunks) {
-      await this.redis
-        .getClient()
-        .set(`chunk:${chunk.hash}`, '1');
+      await this.redis.getClient().set(`chunk:${chunk.hash}`, '1');
     }
 
     console.log(`Ingested ${newChunks.length} chunks`);

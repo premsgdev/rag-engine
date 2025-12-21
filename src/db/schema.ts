@@ -19,7 +19,7 @@ export const documents = pgTable(
   },
   (table) => ({
     hashIdx: uniqueIndex('documents_hash_idx').on(table.hash),
-  })
+  }),
 );
 
 /* ------------- Document Version ------------- */

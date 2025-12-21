@@ -4,15 +4,7 @@ import { EmbeddingsService } from './embeddings.service';
 import { ChromaService } from './chroma.service';
 
 @Module({
-  providers: [
-    TextSplitterService,
-    EmbeddingsService,
-    ChromaService,
-  ],
-  exports: [
-    TextSplitterService,
-    EmbeddingsService,
-    ChromaService,
-  ],
+  providers: [TextSplitterService, EmbeddingsService, ChromaService],
+  exports: [TextSplitterService, EmbeddingsService, ChromaService],
 })
 export class AiModule {}
