@@ -20,15 +20,11 @@ A **deterministic, production-style Retrieval-Augmented Generation (RAG) backend
 
 ## 🧱 High-Level Architecture
 
-PDF Files
-↓
-PDF Parser
-↓
-Text Splitter (sliding window)
-↓
-Local Embeddings (Xenova)
-↓
-Vector Store (ChromaDB)
+graph TD
+    A[PDF Files] --> B(PDF Parser);
+    B --> C(Text Splitter: sliding window);
+    C --> D(Local Embeddings: Xenova);
+    D --> E[Vector Store: ChromaDB];
 
 ### Chat flow:
 
