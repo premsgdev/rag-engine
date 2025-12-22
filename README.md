@@ -44,29 +44,6 @@ Context Assembly
 ↓
 LLM Streaming Answer (Gemini)
 
-### 📁 Project Structure
-
-rag-engine/
-├── data/
-│ └── documents/
-│ ├── en/
-│ ├── ml/
-│ └── de/
-│
-├── src/
-│ ├── ai/ # Core AI infrastructure
-│ ├── chat-llm/ # LLM adapters & prompts
-│ ├── chat-agents/ # Agentic reasoning (validation)
-│ ├── chat-retrieval/ # Vector retrieval + context assembly
-│ ├── chat/ # Chat orchestration & state
-│ ├── cli/ # CLI ingestion
-│ ├── redis/ # Redis integration
-│ └── app.module.ts
-│
-├── docker-compose.yml # ChromaDB + Redis
-├── package.json
-├── tsconfig.json
-├── .env
 
 ## 🌍 Language Handling (Deterministic)
 
