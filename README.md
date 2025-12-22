@@ -1,98 +1,230 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🧠 Local RAG Engine (NestJS)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A **deterministic, production-style Retrieval-Augmented Generation (RAG) backend** built with **NestJS**, **local embeddings**, **external vector storage**, **agentic validation**, and **streaming answers**.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## ✨ Key Capabilities
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- ✅ Deterministic document ingestion (CLI-based)
+- 🌍 Language-aware document handling (folder-based)
+- 🧠 Local embeddings using **Xenova**
+- 🗄 External vector storage using **ChromaDB**
+- ⚡ Redis-based deduplication and chat state
+- 🤖 Agentic query validation (LLM + evidence)
+- 💬 Multi-turn chat with clarification handling
+- 🌊 Streaming answers using **Gemini**
+- 🧱 Clean, modular NestJS architecture
 
-## Project setup
+---
+
+## 🧱 High-Level Architecture
+
+PDF Files
+↓
+PDF Parser
+↓
+Text Splitter (sliding window)
+↓
+Local Embeddings (Xenova)
+↓
+Vector Store (ChromaDB)
+
+### Chat flow:
+
+User Query
+↓
+Vector Signal Check
+↓
+Agentic Validation (with snippets)
+↓
+Retrieval (top-K chunks)
+↓
+Context Assembly
+↓
+LLM Streaming Answer (Gemini)
+
+### 📁 Project Structure
+
+rag-engine/
+├── data/
+│ └── documents/
+│ ├── en/
+│ ├── ml/
+│ └── de/
+│
+├── src/
+│ ├── ai/ # Core AI infrastructure
+│ ├── chat-llm/ # LLM adapters & prompts
+│ ├── chat-agents/ # Agentic reasoning (validation)
+│ ├── chat-retrieval/ # Vector retrieval + context assembly
+│ ├── chat/ # Chat orchestration & state
+│ ├── cli/ # CLI ingestion
+│ ├── redis/ # Redis integration
+│ └── app.module.ts
+│
+├── docker-compose.yml # ChromaDB + Redis
+├── package.json
+├── tsconfig.json
+├── .env
+
+## 🌍 Language Handling (Deterministic)
+
+Documents are grouped by **folder name**, which is the **source of truth** for language.
+  - data/documents/en/.pdf → English
+  - data/documents/ml/.pdf → Malayalam
+  - data/documents/de/*.pdf → German
+
+Why this approach?
+
+- ✔ No language detection cost
+- ✔ No misclassification
+- ✔ Deterministic behavior
+- ✔ Easy to scale
+
+---
+
+## 🧩 Core Components (What Each Does)
+
+### 1️⃣ EmbeddingsService
+- Uses **Xenova/all-MiniLM-L6-v2**
+- Runs locally (no cloud dependency)
+- Model is loaded once and reused
+
+---
+
+### 2️⃣ ChromaService
+- Thin client to external **ChromaDB**
+- Handles:
+  - Upserts
+  - Similarity search
+- Acts as an adapter (normalizes external data)
+
+---
+
+### 3️⃣ VectorSignalService
+- Cheap probe to check:
+  > “Does the corpus contain anything related to this query?”
+- Prevents unnecessary LLM calls
+
+---
+
+### 4️⃣ QueryValidatorAgent
+- LLM-based agent
+- Validates queries using **retrieved snippets**
+- Handles:
+  - Ambiguity
+  - Out-of-scope queries
+  - Clarification requests
+
+---
+
+### 5️⃣ RetrieverService
+- Performs real similarity search (top-K)
+- No thresholds, no guessing
+- Pure retrieval logic
+
+---
+
+### 6️⃣ ContextAssemblerService
+- Builds a safe, bounded context
+- Prevents token overflow
+- Preserves document sources
+
+---
+
+### 7️⃣ AnswerGeneratorService
+- Streams answers using **Gemini**
+- No hallucination:
+  - Answers ONLY from provided context
+- Retry + backoff on transient failures
+
+---
+
+### 8️⃣ ChatService (Orchestrator)
+Coordinates the full flow:
+Signal Check
+→ Validation
+→ Clarification Handling
+→ Retrieval
+→ Context Assembly
+→ Streaming Answer
+
+---
+
+## 🔁 Ingestion Workflow (CLI)
+
+### Command
 
 ```bash
-$ npm install
+npx ts-node src/cli.ts ingest:documents
 ```
+#### What happens
+  1. Crawl language folders
+  2. Parse PDFs
+  3. Split text (sliding window)
+  4. Hash chunks (SHA-256)
+  5. Deduplicate using Redis 
+  6. Embed new chunks (Xenova)
+  7. Upsert to ChromaDB
 
-## Compile and run the project
+## 💬 Chat Workflow (Multi-Turn)
 
+#### Example
+
+User: What is life?
+
+System: Did you mean LIFE Mission (Livelihood Inclusion and Financial Empowerment Mission)?
+
+(State stored in Redis)
+
+User: yes
+
+System:
+  - Resolves clarification
+  - Rewrites query internally
+  - Retrieves context
+  - Streams grounded answer
+
+✔ No hallucination
+✔ Natural chat experience
+✔ Deterministic state handling
+
+## 🧠 Design Principles
+
+  - Determinism over guessing
+  - Evidence before reasoning
+  - Clarify before answering
+  - State in backend, not in LLM
+  - Adapters isolate external systems
+  - Fail closed, never hallucinate
+
+
+## 🚀 Getting Started
+Prerequisites:
+  - Docker
+  - Node.js 18+
+  - Docker & Docker Compose
+  - Redis
+  - ChromaDB
+  
+#### Environment Variables
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+GEMINI_API_KEY=your_api_key
+CHROMA_HOST=http://localhost:8000
 ```
 
-## Run tests
-
+#### Start infrastructure
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker compose up -d
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
+#### Run ingestion
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npx ts-node src/cli.ts ingest:documents
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+#### Start API (dev)
+```bash
+npm run start:dev
+```

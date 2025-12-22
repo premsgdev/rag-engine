@@ -47,7 +47,7 @@ export class ChatService {
         onToken(validationResult.reason ?? 'Can you clarify your question?');
         return;
       }
-      onToken(
+      onToken( 
         validationResult.reason ??
           'This question cannot be answered from the available documents.',
       );
