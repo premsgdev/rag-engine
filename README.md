@@ -20,26 +20,11 @@ A **deterministic, production-style Retrieval-Augmented Generation (RAG) backend
 
 ## 🧱 High-Level Architecture
 
-graph TD
-    A[PDF Files] --> B(PDF Parser);
-    B --> C(Text Splitter: sliding window);
-    C --> D(Local Embeddings: Xenova);
-    D --> E[Vector Store: ChromaDB];
+PDF Files -> PDF Parser -> Text Splitter (sliding window) -> Local Embeddings (Xenova) -> Vector Store (ChromaDB)
 
 ### Chat flow:
 
-User Query
-↓
-Vector Signal Check
-↓
-Agentic Validation (with snippets)
-↓
-Retrieval (top-K chunks)
-↓
-Context Assembly
-↓
-LLM Streaming Answer (Gemini)
-
+User Query -> Vector Signal Check -> Agentic Validation (with snippets) -> Retrieval (top-K chunks) -> Context Assembly -> LLM Streaming Answer (Gemini)
 
 ## 🌍 Language Handling (Deterministic)
 
